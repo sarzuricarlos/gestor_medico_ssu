@@ -3,7 +3,11 @@ from mysql.connector import Error
 from src.conexion import ConexionBaseDatos
 
 ESTADOS_DICTAMEN = ("APROBADO", "RECHAZADO", "OBSERVADO")
-
+ORDENES = {
+    "urgencia": "nivel_urgencia DESC, fecha_ingreso DESC",
+    "antiguas": "fecha_ingreso ASC",
+    "recientes": "fecha_ingreso DESC",
+}
 
 def actualizar_dictamen_solicitud(id_solicitud, estado, justificacion, id_operador):
     """Registra el dictamen de una solicitud médica con fecha_dictamen = NOW().
@@ -34,11 +38,14 @@ def actualizar_dictamen_solicitud(id_solicitud, estado, justificacion, id_operad
     finally:
         cursor.close()
 class SolicitudRepository:
-    def listar_solicitudes(self):
+    def listar_solicitudes(self, orden="recientes"):
+        if orden not in ORDENES:
+            raise ValueError(f"Orden inválido: {orden}. Use uno de {tuple(ORDENES)}")
+
         conexion = ConexionBaseDatos.obtener_conexion()
         cursor = conexion.cursor(dictionary=True)
         try:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT id_solicitud_medica, id_estudiante, nivel_urgencia,
                        estado_solicitud, fecha_ingreso
                 FROM solicitudes_medicas
