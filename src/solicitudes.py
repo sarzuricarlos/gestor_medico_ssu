@@ -33,3 +33,19 @@ def actualizar_dictamen_solicitud(id_solicitud, estado, justificacion, id_operad
         raise
     finally:
         cursor.close()
+class SolicitudRepository:
+    def listar_solicitudes(self):
+        conexion = ConexionBaseDatos.obtener_conexion()
+        cursor = conexion.cursor(dictionary=True)
+        try:
+            cursor.execute("""
+                SELECT id_solicitud_medica, id_estudiante, nivel_urgencia,
+                       estado_solicitud, fecha_ingreso
+                FROM solicitudes_medicas
+                ORDER BY fecha_ingreso DESC
+            """)
+            filas = cursor.fetchall()
+            conexion.commit()  # cierra la lectura para ver datos nuevos al recargar
+            return filas
+        finally:
+            cursor.close()
