@@ -35,3 +35,27 @@ class ConexionBaseDatos:
             cls._conexion.close()
             cls._conexion = None
             print("Conexión a la base de datos cerrada.")
+
+
+@classmethod
+def ejecutar_consulta(cls, sql, parametros=None):
+    """
+    Crea el método ejecutar_consulta(sql, parametros) en ConexionBaseDatos
+    que use tuplas %s y retorne diccionarios/listas evitando inyección SQL.
+    """
+    conexion = cls.obtener_conexion()
+    cursor = None
+    try:
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute(sql, parametros or ())
+        resultado = cursor.fetchall()
+        return resultado
+    except Error as e:
+        print(f"Error al ejecutar la consulta SELECT: {e}")
+        raise e
+    finally:
+        if cursor:
+            cursor.close()
+
+
+
