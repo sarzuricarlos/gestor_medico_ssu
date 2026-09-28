@@ -1,5 +1,5 @@
 import customtkinter as ctk
-
+from tkinter import messagebox
 # Colores en formato (modo claro, modo oscuro), iguales a los de app_seguro.py
 COLOR_PRIMARIO = ("#1F6AA5", "#1A4F7A")
 COLOR_FONDO = ("#EEF2F7", "#16181C")
@@ -17,7 +17,7 @@ class VentanaDictamenModal(ctk.CTkToplevel):
     def __init__(self, master, id_solicitud):
         super().__init__(master)
         self.id_solicitud = id_solicitud
-
+        self.justificacion = None
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
@@ -70,6 +70,17 @@ class VentanaDictamenModal(ctk.CTkToplevel):
         self.frame_formulario = ctk.CTkFrame(self, fg_color=COLOR_SUPERFICIE, corner_radius=12)
         self.frame_formulario.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
         self.frame_formulario.grid_columnconfigure(0, weight=1)
+                self.frame_formulario.grid_rowconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            self.frame_formulario,
+            text="Justificación",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=COLOR_TEXTO,
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(16, 4))
+
+        self.txt_justificacion = ctk.CTkTextbox(self.frame_formulario, height=180, wrap="word")
+        self.txt_justificacion.grid(row=1, column=0, sticky="nsew", padx=16, pady=(0, 16))
 
     def crear_botones(self):
         botones = ctk.CTkFrame(self, fg_color="transparent")
@@ -85,9 +96,27 @@ class VentanaDictamenModal(ctk.CTkToplevel):
             command=self.cerrar,
         )
         self.btn_cancelar.pack(side="right")
-
+        self.btn_guardar = ctk.CTkButton(
+            botones,
+            text="Guardar",
+            width=110,
+            command=self.validar_y_guardar,
+        )
+        self.btn_guardar.pack(side="right", padx=(0, 8))
         self.protocol("WM_DELETE_WINDOW", self.cerrar)
+    def validar_y_guardar(self):
+        """Exige una justificación con contenido antes de aceptar el dictamen."""
+        justificacion = self.txt_justificacion.get("1.0", "end").strip()
+        if not justificacion:
+            messagebox.showerror(
+                "Justificación requerida",
+                "Debe ingresar una justificación antes de guardar.",
+                parent=self,
+            )
+            return
 
+        self.justificacion = justificacion
+        self.cerrar()
     def cerrar(self):
         self.grab_release()
         self.destroy()
