@@ -1,5 +1,5 @@
 from tkinter import messagebox, ttk
-
+import customtkinter as ctk
 # (clave del registro, encabezado visible, ancho)
 COLUMNAS = (
     ("id_solicitud_medica", "ID", 60),
@@ -11,7 +11,12 @@ COLUMNAS = (
 
 OPCIONES_ESTADO = ("TODOS", "PENDIENTE", "APROBADO", "RECHAZADO", "OBSERVADO")
 OPCIONES_URGENCIA = ("TODAS", "ALTA", "MEDIA", "BAJA")
-
+# texto del menú -> clave de orden que entiende SolicitudRepository
+OPCIONES_ORDEN = {
+    "Urgencia: Mayor a Menor": "urgencia",
+    "Fecha: Más Antiguas": "antiguas",
+    "Fecha: Más Recientes": "recientes",
+}
 
 class FrameGestionSolicitudes(ttk.Frame):
     """Vista principal del panel de gestión de solicitudes (rol ENCARGADO)."""
@@ -76,6 +81,15 @@ class FrameGestionSolicitudes(ttk.Frame):
         self.btn_limpiar.grid(row=0, column=8)
 
         self.entry_estudiante.bind("<Return>", lambda _: self.aplicar_filtros())
+        # Menú de ordenamiento: al elegir una opción se recarga la tabla
+        ttk.Label(self.frame_filtros, text="Ordenar por:").grid(row=1, column=0, padx=(0, 4), pady=(8, 0), sticky="w")
+        self.menu_orden = ctk.CTkOptionMenu(
+            self.frame_filtros,
+            values=list(OPCIONES_ORDEN),
+            command=lambda _valor: self.cargar_tabla_solicitudes(),
+        )
+        self.menu_orden.set("Fecha: Más Recientes")
+        self.menu_orden.grid(row=1, column=1, columnspan=3, pady=(8, 0), sticky="w")
 
     def _crear_zona_tabla(self):
         self.frame_tabla = ttk.LabelFrame(self, text="Solicitudes", padding=8)
@@ -100,25 +114,6 @@ class FrameGestionSolicitudes(ttk.Frame):
 
     def cargar_tabla_solicitudes(self):
         """Limpia las filas actuales y muestra las solicitudes del repositorio."""
-        self.tabla.delete(*self.tabla.get_children())
-        if self.repositorio is None:
-            return
-        for fila in self.repositorio.listar_solicitudes():
-            if isinstance(fila, dict):  # si no, se espera una tupla en el orden de COLUMNAS
-                fila = [fila[clave] for clave, _, _ in COLUMNAS]
-            self.tabla.insert("", "end", values=fila)
-
-    def cargar_solicitudes_pendientes(self):
-        """Muestra en la tabla solo las solicitudes en estado PENDIENTE."""
-        self.tabla.delete(*self.tabla.get_children())
-        if self.repositorio is None:
-            return
-        for fila in self.repositorio.listar_solicitudes():
-            if fila["estado_solicitud"] == "PENDIENTE":
-                self.tabla.insert("", "end", values=[fila[clave] for clave, _, _ in COLUMNAS])
-
-    def aplicar_filtros(self):
-        """Muestra en la tabla solo las solicitudes que cumplen los filtros seleccionados."""
         estado = self.combo_estado.get()
         urgencia = self.combo_urgencia.get()
         id_estudiante = self.entry_estudiante.get().strip()
@@ -131,19 +126,28 @@ class FrameGestionSolicitudes(ttk.Frame):
         if self.repositorio is None:
             return
 
+        orden = OPCIONES_ORDEN[self.menu_orden.get()]
         total = 0
-        for fila in self.repositorio.listar_solicitudes():
+        for fila in self.repositorio.listar_solicitudes(orden):
             if self._cumple_filtros(fila, estado, urgencia, id_estudiante):
                 self.tabla.insert("", "end", values=[fila[clave] for clave, _, _ in COLUMNAS])
                 total += 1
         self.frame_tabla.configure(text=f"Solicitudes ({total})")
+
+
+    def cargar_solicitudes_pendientes(self):
+        """Muestra en la tabla solo las solicitudes en estado PENDIENTE."""
+        self.limpiar_filtros()
+    def aplicar_filtros(self):
+        """Muestra en la tabla solo las solicitudes que cumplen los filtros seleccionados."""
+        self.limpiar_filtros()
 
     def limpiar_filtros(self):
         """Restablece los filtros a sus valores iniciales y recarga la tabla."""
         self.combo_estado.set("PENDIENTE")
         self.combo_urgencia.set("TODAS")
         self.entry_estudiante.delete(0, "end")
-        self.aplicar_filtros()
+        self.cargar_tabla_solicitudes()
 
     def _cumple_filtros(self, fila, estado, urgencia, id_estudiante):
         if estado != "TODOS" and fila["estado_solicitud"] != estado:
