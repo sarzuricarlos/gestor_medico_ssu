@@ -18,7 +18,7 @@ DB_NAME = os.getenv("DB_NAME", "defaultdb")
 
 # Ruta absoluta al certificado SSL/CA
 DB_SSL_CA = str(CA_PEM_PATH) if CA_PEM_PATH.exists() else None
-DB_SSL_VERIFY_CERT = os.getenv("DB_SSL_VERIFY_CERT", "True")
+DB_SSL_VERIFY_CERT = os.getenv("DB_SSL_VERIFY_CERT", "True").lower() in ("true", "1", "yes")
 
 # Diccionario unificado para MySQL / Aiven
 DB_CONFIG = {
