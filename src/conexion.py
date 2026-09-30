@@ -19,13 +19,11 @@ class ConexionBaseDatos:
         """Devuelve la conexión activa o crea una nueva utilizando la configuración con SSL."""
         if cls._conexion is None or not cls._conexion.is_connected():
             try:
-                # Se desempaca el diccionario DB_CONFIG definido en config.py
                 cls._conexion = mysql.connector.connect(**config.DB_CONFIG)
                 print("Conexión exitosa a la base de datos (SSL habilitado).")
             except Error as e:
                 print(f"Error al intentar conectar con la base de datos: {e}")
                 raise e
-
         return cls._conexion
 
     @classmethod
@@ -36,26 +34,43 @@ class ConexionBaseDatos:
             cls._conexion = None
             print("Conexión a la base de datos cerrada.")
 
+    @classmethod
+    def ejecutar_consulta(cls, sql, parametros=None):
+        """
+        Ejecuta una consulta SELECT parametrizada y devuelve los resultados como diccionarios.
+        Evita inyección SQL usando tuplas %s.
+        """
+        conexion = cls.obtener_conexion()
+        cursor = None
+        try:
+            cursor = conexion.cursor(dictionary=True)
+            cursor.execute(sql, parametros or ())
+            resultado = cursor.fetchall()
+            return resultado
+        except Error as e:
+            print(f"Error al ejecutar la consulta SELECT: {e}")
+            raise e
+        finally:
+            if cursor:
+                cursor.close()
 
-@classmethod
-def ejecutar_consulta(cls, sql, parametros=None):
-    """
-    Crea el método ejecutar_consulta(sql, parametros) en ConexionBaseDatos
-    que use tuplas %s y retorne diccionarios/listas evitando inyección SQL.
-    """
-    conexion = cls.obtener_conexion()
-    cursor = None
-    try:
-        cursor = conexion.cursor(dictionary=True)
-        cursor.execute(sql, parametros or ())
-        resultado = cursor.fetchall()
-        return resultado
-    except Error as e:
-        print(f"Error al ejecutar la consulta SELECT: {e}")
-        raise e
-    finally:
-        if cursor:
-            cursor.close()
-
-
-
+    @classmethod
+    def ejecutar_transaccion(cls, sql, parametros=None):
+        """
+        Ejecuta una operación INSERT/UPDATE/DELETE con manejo de commit y rollback.
+        Devuelve True si la operación afectó al menos una fila.
+        """
+        conexion = cls.obtener_conexion()
+        cursor = None
+        try:
+            cursor = conexion.cursor()
+            cursor.execute(sql, parametros or ())
+            conexion.commit()
+            return cursor.rowcount > 0
+        except Error as e:
+            conexion.rollback()
+            print(f"Error al ejecutar la transacción: {e}")
+            raise e
+        finally:
+            if cursor:
+                cursor.close()
