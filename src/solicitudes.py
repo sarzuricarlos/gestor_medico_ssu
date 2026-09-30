@@ -49,7 +49,7 @@ class SolicitudRepository:
                 SELECT id_solicitud_medica, id_estudiante, nivel_urgencia,
                        estado_solicitud, fecha_ingreso
                 FROM solicitudes_medicas
-                ORDER BY fecha_ingreso DESC
+                ORDER BY {ORDENES[orden]}
             """)
             filas = cursor.fetchall()
             conexion.commit()  # cierra la lectura para ver datos nuevos al recargar
