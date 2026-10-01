@@ -2,12 +2,19 @@ from datetime import datetime
 
 import customtkinter as ctk
 
+from src.sesion import SesionUsuario
+from src.solicitudes import SolicitudRepository
+from src.medicamentos import MedicamentoRepository
+from src.docentes import DocenteRepository
+from src.vistas.frame_gestion_solicitudes import FrameGestionSolicitudes
+from src.vistas.frame_consulta_medicamentos import FrameConsultaMedicamentos
+from src.vistas.frame_estado_seguro_docente import FrameEstadoSeguroDocente
+
 TITULO_APP = "Gestor Médico - Seguro Social Universitario"
 TAMANO_VENTANA = "1200x720"
 TAMANO_MINIMO = (1100, 650)
 VERSION_APP = "v0.1"
 
-# Colores en formato (modo claro, modo oscuro)
 COLOR_PRIMARIO = ("#1F6AA5", "#1A4F7A")
 COLOR_PRIMARIO_HOVER = ("#185A8C", "#16415F")
 COLOR_FONDO = ("#EEF2F7", "#16181C")
@@ -22,7 +29,6 @@ MESES = [
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 ]
 
-# Módulos que se muestran como tarjetas en la pantalla de inicio
 MODULOS_SISTEMA = [
     ("S", "Solicitudes médicas", "Evaluación y gestión de solicitudes de atención.", "#2E86DE"),
     ("M", "Medicamentos", "Consulta de medicamentos disponibles y su stock.", "#10AC84"),
@@ -34,8 +40,7 @@ MODULOS_SISTEMA = [
 
 
 class VistaBienvenida(ctk.CTkFrame):
-
-    # Pantalla inicial que se muestra al abrir la aplicación.
+    """Pantalla inicial que se muestra al abrir la aplicación."""
 
     def __init__(self, master, app):
         super().__init__(master, fg_color="transparent")
@@ -86,7 +91,6 @@ class VistaBienvenida(ctk.CTkFrame):
         cuadricula = ctk.CTkFrame(self, fg_color="transparent")
         cuadricula.grid(row=2, column=0, sticky="nsew")
 
-        # Distribuye las tarjetas en 3 columnas
         columnas = 3
         for columna in range(columnas):
             cuadricula.grid_columnconfigure(columna, weight=1, uniform="tarjeta")
@@ -139,19 +143,22 @@ class VistaBienvenida(ctk.CTkFrame):
         return "Buenas noches"
 
     def obtener_fecha(self):
-        # Se arma a mano para no depender del idioma del sistema
         hoy = datetime.now()
         return f"{hoy.day} de {MESES[hoy.month - 1]} de {hoy.year}"
 
 
 class AppSeguro(ctk.CTk):
-
-    # Ventana principal: encabezado, menú lateral y contenedor de vistas.
+    """Ventana principal: encabezado, menú lateral y contenedor de vistas."""
 
     def __init__(self):
         super().__init__()
         self.vista_actual = None
         self.botones_menu = {}
+
+        # Repositorios
+        self.repo_solicitudes = SolicitudRepository()
+        self.repo_medicamentos = MedicamentoRepository()
+        self.repo_docentes = DocenteRepository()
 
         self.configurar_ventana()
         self.crear_encabezado()
@@ -159,6 +166,21 @@ class AppSeguro(ctk.CTk):
         self.crear_contenedor()
 
         self.agregar_opcion_menu("Inicio", VistaBienvenida)
+
+        # Vistas de las HU
+        self.agregar_opcion_menu(
+            "Solicitudes médicas",
+            lambda master, app: FrameGestionSolicitudes(master, repositorio=self.repo_solicitudes),
+        )
+        self.agregar_opcion_menu(
+            "Medicamentos",
+            lambda master, app: FrameConsultaMedicamentos(master, app, repositorio=self.repo_medicamentos),
+        )
+        self.agregar_opcion_menu(
+            "Estado del seguro",
+            lambda master, app: FrameEstadoSeguroDocente(master, app, repositorio=self.repo_docentes),
+        )
+
         self.mostrar_vista(VistaBienvenida)
 
     def configurar_ventana(self):
@@ -169,7 +191,6 @@ class AppSeguro(ctk.CTk):
         self.geometry(TAMANO_VENTANA)
         self.minsize(*TAMANO_MINIMO)
         self.configure(fg_color=COLOR_FONDO)
-
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -199,7 +220,6 @@ class AppSeguro(ctk.CTk):
             text_color=COLOR_TEXTO_ENCABEZADO,
         ).grid(row=0, column=1, sticky="w")
 
-        # Interruptor para alternar entre modo claro y oscuro
         self.interruptor_tema = ctk.CTkSwitch(
             encabezado,
             text="Modo oscuro",
@@ -217,8 +237,6 @@ class AppSeguro(ctk.CTk):
         self.menu_lateral.grid(row=1, column=0, sticky="ns")
         self.menu_lateral.grid_propagate(False)
         self.menu_lateral.grid_columnconfigure(0, weight=1)
-
-
         self.menu_lateral.grid_rowconfigure(99, weight=1)
 
         ctk.CTkLabel(
@@ -236,7 +254,6 @@ class AppSeguro(ctk.CTk):
         ).grid(row=100, column=0, pady=20)
 
     def crear_contenedor(self):
-        # Contenedor principal donde se alternan las pantallas
         self.contenedor = ctk.CTkFrame(self, fg_color="transparent")
         self.contenedor.grid(row=1, column=1, padx=24, pady=24, sticky="nsew")
         self.contenedor.grid_rowconfigure(0, weight=1)
@@ -253,20 +270,18 @@ class AppSeguro(ctk.CTk):
             command=lambda: self.mostrar_vista(clase_vista),
         )
         boton.grid(row=len(self.botones_menu) + 1, column=0, sticky="ew", padx=12, pady=2)
-        self.botones_menu[clase_vista] = boton
+        self.botones_menu[texto] = boton
         self.resaltar_opcion_menu()
 
     def resaltar_opcion_menu(self):
-        # Marca en el menú la opción de la vista que se está mostrando
-        clase_actual = type(self.vista_actual)
-        for clase_vista, boton in self.botones_menu.items():
-            if clase_vista is clase_actual:
+        for texto, boton in self.botones_menu.items():
+            es_actual = self.vista_actual and texto == getattr(self, "_vista_actual_nombre", None)
+            if es_actual:
                 boton.configure(fg_color=COLOR_PRIMARIO, hover_color=COLOR_PRIMARIO_HOVER, text_color=COLOR_TEXTO_ENCABEZADO)
             else:
                 boton.configure(fg_color="transparent", hover_color=COLOR_BOTON_MENU_HOVER, text_color=COLOR_TEXTO)
 
     def mostrar_vista(self, clase_vista, **kwargs):
-        # Destruye la vista anterior antes de mostrar la nueva
         if self.vista_actual is not None:
             self.vista_actual.destroy()
 
@@ -280,8 +295,3 @@ class AppSeguro(ctk.CTk):
             ctk.set_appearance_mode("dark")
         else:
             ctk.set_appearance_mode("light")
-
-
-if __name__ == "__main__":
-    app = AppSeguro()
-    app.mainloop()
