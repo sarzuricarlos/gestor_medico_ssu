@@ -155,6 +155,14 @@ class AppSeguro(ctk.CTk):
         self.vista_actual = None
         self.botones_menu = {}
 
+        # Auto-login temporal para pruebas (sin pantalla de login aún)
+        if not SesionUsuario.hay_sesion_activa():
+            SesionUsuario.iniciar_sesion(
+                id_usuario=45,
+                nombre_usuario="Dr. Rene Zabaleta",
+                id_rol="DOCENTE",
+            )
+
         # Repositorios
         self.repo_solicitudes = SolicitudRepository()
         self.repo_medicamentos = MedicamentoRepository()

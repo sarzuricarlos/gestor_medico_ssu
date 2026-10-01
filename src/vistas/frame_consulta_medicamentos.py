@@ -22,7 +22,7 @@ class FrameConsultaMedicamentos(ctk.CTkFrame):
         self._crear_barra_busqueda()
         self._crear_panel_resultados()
 
-        self.mostrar_resultados([])
+        self.buscar_medicamentos()
 
     def _crear_encabezado(self):
         ctk.CTkLabel(
@@ -30,14 +30,14 @@ class FrameConsultaMedicamentos(ctk.CTkFrame):
             text="Consulta de Medicamentos",
             font=ctk.CTkFont(size=22, weight="bold"),
             text_color=COLOR_TEXTO,
-        ).grid(row=0, column=0, sticky="w", pady=(0, 4))
+        ).grid(row=0, column=0, sticky="w", pady=(0, 5))
 
         ctk.CTkLabel(
             self,
             text="Busque un medicamento por su nombre para ver disponibilidad y stock.",
             font=ctk.CTkFont(size=13),
             text_color=COLOR_TEXTO_SECUNDARIO,
-        ).grid(row=0, column=0, sticky="w", pady=(36, 12))
+        ).grid(row=0, column=0, sticky="w", pady=(60, 12))
 
     def _crear_barra_busqueda(self):
         frame_busqueda = ctk.CTkFrame(self, fg_color=COLOR_SUPERFICIE, corner_radius=12)

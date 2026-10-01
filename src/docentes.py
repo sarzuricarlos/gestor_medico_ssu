@@ -18,3 +18,18 @@ class DocenteRepository:
         """
         resultado = ConexionBaseDatos.ejecutar_consulta(sql, (id_usuario,))
         return resultado[0] if resultado else None
+
+    @staticmethod
+    def listar_docentes():
+        """Devuelve la lista de todos los docentes con su id y nombre.
+        Retorna una lista de tuplas (id_usuario, nombre_usuario).
+        """
+        sql = """
+            SELECT usuarios.id_usuario, usuarios.nombre_usuario
+            FROM usuarios
+            INNER JOIN docentes_seguros ON docentes_seguros.id_usuario = usuarios.id_usuario
+            WHERE usuarios.rol_usuario = 'DOCENTE'
+            ORDER BY usuarios.nombre_usuario
+        """
+        filas = ConexionBaseDatos.ejecutar_consulta(sql)
+        return [(f["id_usuario"], f["nombre_usuario"]) for f in filas]

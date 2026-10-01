@@ -1,13 +1,29 @@
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Carga variables desde un archivo .env si está presente
 load_dotenv()
 
+
+def obtener_ruta_recurso(ruta_relativa):
+    """
+    Obtiene la ruta absoluta a un recurso, funcionando tanto en desarrollo
+    como dentro de un ejecutable generado con PyInstaller.
+    """
+    if hasattr(sys, "_MEIPASS"):
+        # Estamos dentro de un .exe empaquetado por PyInstaller
+        base = Path(sys._MEIPASS)
+    else:
+        # Estamos en desarrollo normal
+        base = Path(__file__).resolve().parent
+    return base / ruta_relativa
+
+
 # Directorio raíz del proyecto y ruta al certificado SSL
 BASE_DIR = Path(__file__).resolve().parent
-CA_PEM_PATH = BASE_DIR / "ca.pem"
+CA_PEM_PATH = obtener_ruta_recurso("ca.pem")
 
 # Constantes globales de conexión
 DB_HOST = os.getenv("DB_HOST", "mysql-3b77147e-postres-bd.e.aivencloud.com")

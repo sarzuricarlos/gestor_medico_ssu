@@ -8,8 +8,7 @@ class MedicamentoRepository:
     def obtener_todos_medicamentos():
         """Lista todos los medicamentos registrados."""
         sql = (
-            "SELECT id_medicamento, nombre_medicamento, "
-            "stock_medicamento, descripcion_medicamento "
+            "SELECT id_medicamento, nombre_medicamento, stock_medicamento "
             "FROM medicamentos"
         )
         return ConexionBaseDatos.ejecutar_consulta(sql)
@@ -18,8 +17,7 @@ class MedicamentoRepository:
     def buscar_medicamentos_por_nombre(nombre):
         """Busca medicamentos por nombre usando LIKE insensible a mayúsculas."""
         sql = (
-            "SELECT id_medicamento, nombre_medicamento, "
-            "stock_medicamento, descripcion_medicamento "
+            "SELECT id_medicamento, nombre_medicamento, stock_medicamento "
             "FROM medicamentos "
             "WHERE LOWER(nombre_medicamento) LIKE LOWER(%s)"
         )
