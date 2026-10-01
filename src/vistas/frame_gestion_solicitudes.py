@@ -4,9 +4,9 @@ from tkinter import ttk
 COLUMNAS = (
     ("id_solicitud_medica", "ID", 60),
     ("id_estudiante", "Estudiante", 90),
+    ("fecha_ingreso", "Fecha", 150),
     ("nivel_urgencia", "Urgencia", 90),
     ("estado_solicitud", "Estado", 110),
-    ("fecha_ingreso", "Fecha de ingreso", 150),
 )
 
 
@@ -76,3 +76,12 @@ class FrameGestionSolicitudes(ttk.Frame):
             if isinstance(fila, dict):  # si no, se espera una tupla en el orden de COLUMNAS
                 fila = [fila[clave] for clave, _, _ in COLUMNAS]
             self.tabla.insert("", "end", values=fila)
+
+    def cargar_solicitudes_pendientes(self):
+        """Muestra en la tabla solo las solicitudes en estado PENDIENTE."""
+        self.tabla.delete(*self.tabla.get_children())
+        if self.repositorio is None:
+            return
+        for fila in self.repositorio.listar_solicitudes():
+            if fila["estado_solicitud"] == "PENDIENTE":
+                self.tabla.insert("", "end", values=[fila[clave] for clave, _, _ in COLUMNAS])
