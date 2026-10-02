@@ -9,6 +9,12 @@ COLOR_TEXTO_ENCABEZADO = "#FFFFFF"
 
 TEXTO_SIN_DATOS = "—"
 
+COLOR_BANNER_HABILITADO = "#2E7D32"
+COLOR_BANNER_INHABILITADO = "#C62828"
+COLOR_BANNER_SIN_DATOS = "#7F8C8D"
+TEXTO_BANNER_HABILITADO = "SU SEGURO SE ENCUENTRA HABILITADO"
+TEXTO_BANNER_INHABILITADO = "SU SEGURO SE ENCUENTRA INHABILITADO"
+
 # (atributo del label, título del indicador, color del distintivo)
 INDICADORES = (
     ("lbl_estado_seguro", "Estado del seguro", "#F39C12"),
@@ -49,6 +55,37 @@ class FrameEstadoSeguroDocente(ctk.CTkFrame):
             font=ctk.CTkFont(size=14),
             text_color=COLOR_TEXTO_SECUNDARIO,
         ).pack(anchor="w")
+
+        self.crear_banner_estado(encabezado)
+
+    def crear_banner_estado(self, master):
+        """Crea el label destacado que indica si el seguro esta habilitado."""
+        self.banner_estado = ctk.CTkLabel(
+            master,
+            text=TEXTO_SIN_DATOS,
+            height=64,
+            corner_radius=14,
+            fg_color=COLOR_BANNER_SIN_DATOS,
+            text_color=COLOR_TEXTO_ENCABEZADO,
+            font=ctk.CTkFont(size=22, weight="bold"),
+        )
+        self.banner_estado.pack(fill="x", pady=(12, 0))
+
+    def actualizar_banner_estado(self, estado_seguro):
+        """Muestra el banner verde o rojo segun estado_seguro ('HABILITADO' o 'INHABILITADO')."""
+        # Verde si esta habilitado, rojo si esta inhabilitado
+        if estado_seguro == "HABILITADO":
+            self.banner_estado.configure(
+                text=TEXTO_BANNER_HABILITADO, fg_color=COLOR_BANNER_HABILITADO
+            )
+        elif estado_seguro == "INHABILITADO":
+            self.banner_estado.configure(
+                text=TEXTO_BANNER_INHABILITADO, fg_color=COLOR_BANNER_INHABILITADO
+            )
+        else:
+            self.banner_estado.configure(
+                text=TEXTO_SIN_DATOS, fg_color=COLOR_BANNER_SIN_DATOS
+            )
 
     def crear_perfil(self):
         perfil = ctk.CTkFrame(self, fg_color=COLOR_PRIMARIO, corner_radius=14)
